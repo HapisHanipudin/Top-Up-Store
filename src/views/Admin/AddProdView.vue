@@ -28,7 +28,7 @@ const newItems = ref({
   name: "",
   price: 0,
   game: "",
-  category: "",
+  currency: "",
   uploader: session.user.email,
 });
 
@@ -130,14 +130,14 @@ const addCategory = async () => {
     // Create a reference to the 'products' collection within the game document
     const productsCollectionRef = collection(gameDocRef, "products");
 
-    // Create a reference to the category document within the 'products' collection
+    // Create a reference to the currency document within the 'products' collection
     const categoryRef = doc(productsCollectionRef, customId);
 
-    // Upload the document with the custom ID to the category reference
+    // Upload the document with the custom ID to the currency reference
     await setDoc(categoryRef, newCategory.value);
 
-    // Update newItems.category with the path to the added category
-    newItems.value.category = customId;
+    // Update newItems.currency with the path to the added currency
+    newItems.value.currency = customId;
 
     // Update addedCategory.value to indicate success
     console.log("Document with custom ID added: ", customId);
@@ -159,7 +159,7 @@ const addCategory = async () => {
 const addItems = async () => {
   try {
     // Check if any of the required fields are empty
-    if (!newItems.value.id || !newItems.value.name || !newItems.value.price || !newItems.value.game || !newItems.value.category) {
+    if (!newItems.value.id || !newItems.value.name || !newItems.value.price || !newItems.value.game || !newItems.value.currency) {
       console.error("Please fill in all required fields.");
       itemAdded.value = {
         message: "Please fill in all required fields.",
@@ -177,15 +177,15 @@ const addItems = async () => {
       // Referensi ke subkoleksi 'products' pada dokumen game yang dipilih
       const productsCollectionRef = collection(selectedGameRef, "products");
 
-      // Tambahkan item ke dalam subkoleksi 'products' dan doc 'category'
-      const categoryDocRef = doc(productsCollectionRef, newItems.value.category);
+      // Tambahkan item ke dalam subkoleksi 'products' dan doc 'currency'
+      const categoryDocRef = doc(productsCollectionRef, newItems.value.currency);
 
       const itemsCollectionRef = collection(categoryDocRef, "items");
 
       const itemRef = doc(itemsCollectionRef, newItems.value.id);
       await setDoc(itemRef, newItems.value);
 
-      // Get the category data
+      // Get the currency data
 
       itemAdded.value = {
         message: "Item added to 'products' sub-collection in the selected game document.",
@@ -254,35 +254,35 @@ onBeforeMount(() => {
       </select>
 
       <div class="flex flex-col gap-3" v-if="newItems.game && newItems.game != 'add'">
-        <label for="Games">Category</label>
-        <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.category">
-          <option selected disabled value="">Select category</option>
-          <option v-for="category in categories" :key="category.id" :value="category.id"><img :src="category.image" alt="" /> {{ category.name }}</option>
+        <label for="Games">Currency</label>
+        <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.currency">
+          <option selected disabled value="">Select currency</option>
+          <option v-for="currency in categories" :key="currency.id" :value="currency.id"><img :src="currency.image" alt="" /> {{ currency.name }}</option>
           <option selected v-if="addedCategory.type == 'success'" :value="newCategory.id">{{ newCategory.name }}</option>
           <option value="add">
-            <span class="flex gap-3"><AddIcon />Add new category</span>
+            <span class="flex gap-3"><AddIcon />Add new currency</span>
           </option>
         </select>
-        <div class="flex flex-col grow gap-3" v-if="newItems.category == 'add'">
+        <div class="flex flex-col grow gap-3" v-if="newItems.currency == 'add'">
           <div class="flex gap-3">
             <div class="flex flex-col grow">
-              <label for="id"><strong>Category</strong> ID:</label>
+              <label for="id"><strong>Currency</strong> ID:</label>
               <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newCategory.id" />
             </div>
             <div class="flex flex-col grow">
-              <label for="name"><strong>Category</strong> Name:</label>
+              <label for="name"><strong>Currency</strong> Name:</label>
               <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newCategory.name" />
             </div>
           </div>
           <div class="flex max-h-60 max-w-60">
             <div>
-              <label for="image"><strong>Category</strong> Image:</label>
-              <input required type="file" class="p-3 file:p-2 file:bg-slate-700 file:rounded-full file:border-0 file:hover:bg-slate-600 file:me-3 file:px-4 file:text-white" id="image" @change="handleFileUpload($event, 'category')" />
+              <label for="image"><strong>Currency</strong> Image:</label>
+              <input required type="file" class="p-3 file:p-2 file:bg-slate-700 file:rounded-full file:border-0 file:hover:bg-slate-600 file:me-3 file:px-4 file:text-white" id="image" @change="handleFileUpload($event, 'currency')" />
             </div>
             <div></div>
             <img v-if="newCategory.image" :src="newCategory.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
           </div>
-          <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCategory">Add Category</button>
+          <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCategory">Add Currency</button>
           <div v-if="addedCategory.message" :class="addedCategory.type == 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
             <span>{{ addedCategory.message }}</span>
           </div>

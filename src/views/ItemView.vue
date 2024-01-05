@@ -12,7 +12,7 @@ const cart = ref({
   id: "",
   name: "",
   game: {},
-  category: {},
+  currency: {},
   item: "",
   loginMethod: {},
 });
@@ -39,7 +39,7 @@ const getGame = async () => {
     cart.value.game.products = productsSnapshot.docs.map((doc) => doc.data());
     // console.log(cart.value.game.products);
     if (cart.value.game.products.length > 0) {
-      cart.value.category = cart.value.game.products[0];
+      cart.value.currency = cart.value.game.products[0];
       getItems();
     }
   } catch (error) {
@@ -50,7 +50,7 @@ const getGame = async () => {
 const getItems = async () => {
   try {
     const gameRef = collection(db, "game", $route.params.id, "products");
-    const productRef = doc(gameRef, cart.value.category.id);
+    const productRef = doc(gameRef, cart.value.currency.id);
     const itemsRef = collection(productRef, "items");
 
     const itemsSnapshot = await getDocs(itemsRef);
@@ -92,16 +92,16 @@ onBeforeMount(() => {
           </div>
 
           <div class="flex flex-col gap-3 bg-slate-700 p-3 rounded-lg">
-            <label for="category">Category</label>
+            <label for="currency">Currency</label>
             <div class="flex gap-3">
               <div
                 v-if="cart.game.products"
                 v-for="product in cart.game.products"
                 :key="product.id"
-                :class="cart.category.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
+                :class="cart.currency.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
                 class="flex flex-col gap-2 relative w-4/12 p-3 rounded-lg justify-center items-center text-center"
               >
-                <input @change="getItems" :value="product" v-model="cart.category" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
+                <input @change="getItems" :value="product" v-model="cart.currency" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
                 <img :src="product.image" alt="" />
                 <label class="text-lg" :for="'category_' + product">{{ product.name }}</label>
               </div>
@@ -114,8 +114,8 @@ onBeforeMount(() => {
             <label for="item">Item</label>
             <div v-if="product.items.length > 0" class="flex gap-3">
               <div v-for="item in product.items" :key="item.id" :class="cart.item.id == item.id ? 'bg-blue-500 ' : 'bg-slate-600'" class="flex flex-col relative w-4/12 p-3 rounded-lg items-center text-center">
-                <input :value="item" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
-                <img :src="cart.category.image" alt="" />
+                <input :value="item" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
+                <img :src="cart.currency.image" alt="" />
                 <label class="text-lg" :for="'category_' + item.id">{{ item.name }}</label>
                 <label class="text-lg" :for="'category_' + item.id">Rp {{ item.price.toLocaleString() }}</label>
               </div>

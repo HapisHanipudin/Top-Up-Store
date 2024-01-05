@@ -1,0 +1,1 @@
+import{_ as e,b as t,c}from"./index-yi8XQu8U.js";const s={},r={class:"bg-slate-800 flex w-full items-center justify-center"};function n(a,o){return t(),c("div",r,"ini cart")}const i=e(s,[["render",n]]);export{i as default};
