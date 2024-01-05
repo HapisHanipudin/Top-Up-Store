@@ -1,17 +1,18 @@
 <script setup>
-import { ref, onBeforeMount } from "vue";
+import { ref, onBeforeMount, onMounted } from "vue";
 import { db } from "@/firebase/init";
 import { getDoc, getDocs, doc, collection, query, where } from "firebase/firestore";
 import { useRoute } from "vue-router";
+import { useSessionStore } from "@/stores/user";
 
+const session = useSessionStore();
 const $route = useRoute();
 
-const game = ref({});
 const cart = ref({
   id: "",
   name: "",
-  game: $route.params.id,
-  category: "",
+  game: {},
+  category: {},
   item: "",
   loginMethod: {},
 });
@@ -24,21 +25,21 @@ const getGame = async () => {
   try {
     const gameRef = doc(db, "game", $route.params.id);
     const docSnap = await getDoc(gameRef);
-    game.value = docSnap.data();
-    // cart.value.loginMethod = game.value.method.map((element) => ({ [element.name]: "" }));
-    cart.value.loginMethod = game.value.method.reduce((acc, element) => {
+    cart.value.game = docSnap.data();
+    // cart.value.loginMethod = cart.value.game.method.map((element) => ({ [element.name]: "" }));
+    cart.value.loginMethod = cart.value.game.method.reduce((acc, element) => {
       acc[element.name] = "";
       return acc;
     }, {});
 
-    console.log(cart.value);
+    // console.log(cart.value);
     const productsRef = collection(gameRef, "products");
     const productsSnapshot = await getDocs(productsRef);
 
-    game.value.products = productsSnapshot.docs.map((doc) => doc.data());
-
-    if (game.value.products.length > 0) {
-      cart.value.category = game.value.products[0].id;
+    cart.value.game.products = productsSnapshot.docs.map((doc) => doc.data());
+    // console.log(cart.value.game.products);
+    if (cart.value.game.products.length > 0) {
+      cart.value.category = cart.value.game.products[0];
       getItems();
     }
   } catch (error) {
@@ -48,11 +49,13 @@ const getGame = async () => {
 
 const getItems = async () => {
   try {
-    const gameRef = collection(db, "game", cart.value.game, "products");
-    const productRef = doc(gameRef, cart.value.category);
-    const docSnap = await getDoc(productRef);
-    const result = docSnap.data();
-    product.value = result;
+    const gameRef = collection(db, "game", $route.params.id, "products");
+    const productRef = doc(gameRef, cart.value.category.id);
+    const itemsRef = collection(productRef, "items");
+
+    const itemsSnapshot = await getDocs(itemsRef);
+    product.value.items = itemsSnapshot.docs.map((doc) => doc.data());
+    // console.log(product.value.items);
   } catch (error) {
     console.error("Error fetching items:", error);
   }
@@ -65,17 +68,17 @@ onBeforeMount(() => {
 
 <template>
   <div class="container flex flex-col gap-3 p-4">
-    <h1 class="text-3xl font-bold mt-3">{{ game.name }}</h1>
+    <h1 class="text-3xl font-bold mt-3">{{ cart.game.name }}</h1>
     <div class="flex flex-col lg:flex-row gap-3">
       <div class="lg:w-96 w flex flex-col gap-3">
-        <img :src="game.image" alt="" />
+        <img :src="cart.game.image" alt="" />
         <div>
-          <p class="bg-slate-700 p-3 rounded-md">{{ game.desc }}</p>
+          <p class="bg-slate-700 p-3 rounded-md">{{ cart.game.desc }}</p>
         </div>
       </div>
       <div class="flex flex-col w-full">
         <form action="#" class="flex flex-col gap-3">
-          <div v-for="method in game.method" class="flex flex-col gap-3">
+          <div v-if="cart.game.method" v-for="method in cart.game.method" class="flex flex-col gap-3">
             <label :for="method.name">{{ method.name }}</label>
 
             <!-- Input field for non-select methods -->
@@ -91,19 +94,28 @@ onBeforeMount(() => {
           <div class="flex flex-col gap-3 bg-slate-700 p-3 rounded-lg">
             <label for="category">Category</label>
             <div class="flex gap-3">
-              <div v-for="product in game.products" :key="product.id" :class="cart.category == product.id ? 'bg-blue-500 ' : 'bg-slate-600'" class="flex flex-col relative w-2/12 p-3 rounded-lg items-center text-center">
-                <input @change="getItems" :value="product.id" v-model="cart.category" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
+              <div
+                v-if="cart.game.products"
+                v-for="product in cart.game.products"
+                :key="product.id"
+                :class="cart.category.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
+                class="flex flex-col gap-2 relative w-4/12 p-3 rounded-lg justify-center items-center text-center"
+              >
+                <input @change="getItems" :value="product" v-model="cart.category" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
                 <img :src="product.image" alt="" />
-                <label class="text-lg" :for="'category_' + product.id">{{ product.name }}</label>
+                <label class="text-lg" :for="'category_' + product">{{ product.name }}</label>
+              </div>
+              <div v-else class="flex flex-col relative w-4/12 p-3 rounded-lg items-center text-center bg-slate-600">
+                <label class="text-lg">No items found</label>
               </div>
             </div>
           </div>
           <div class="flex flex-col gap-3">
             <label for="item">Item</label>
             <div v-if="product.items.length > 0" class="flex gap-3">
-              <div v-for="item in product.items" :key="item.id" :class="cart.item == item.id ? 'bg-blue-500 ' : 'bg-slate-600'" class="flex flex-col relative w-2/12 p-3 rounded-lg items-center text-center">
-                <input :value="item.id" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
-                <img :src="product.image" alt="" />
+              <div v-for="item in product.items" :key="item.id" :class="cart.item.id == item.id ? 'bg-blue-500 ' : 'bg-slate-600'" class="flex flex-col relative w-4/12 p-3 rounded-lg items-center text-center">
+                <input :value="item" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
+                <img :src="cart.category.image" alt="" />
                 <label class="text-lg" :for="'category_' + item.id">{{ item.name }}</label>
                 <label class="text-lg" :for="'category_' + item.id">Rp {{ item.price.toLocaleString() }}</label>
               </div>

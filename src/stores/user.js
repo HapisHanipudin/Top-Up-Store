@@ -1,16 +1,17 @@
-import { ref, computed, onBeforeMount } from "vue";
+import { ref, onBeforeMount } from "vue";
 import { defineStore } from "pinia";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/firebase/init";
 
 export const useSessionStore = defineStore("session", () => {
-  const user = ref(null);
+  const user = ref({});
   const isLoggedIn = ref(false);
   const isAdmin = ref(false);
   const modalOpen = ref("");
   const admins = ["hapis.hanipuddin@gmail.com"];
 
-  function checkAuthStatusOnMount() {
+  // Move your logic to a separate function
+  const initializeStore = () => {
     onAuthStateChanged(auth, (userres) => {
       if (userres) {
         isLoggedIn.value = true;
@@ -24,7 +25,7 @@ export const useSessionStore = defineStore("session", () => {
         isAdmin.value = false;
       }
     });
-  }
+  };
 
   function openModal(modal) {
     modalOpen.value = modal;
@@ -43,10 +44,10 @@ export const useSessionStore = defineStore("session", () => {
       });
   }
 
-  // Use the onBeforeMount lifecycle hook to call checkAuthStatusOnMount
+  // Use the onBeforeMount lifecycle hook to call initializeStore
   onBeforeMount(() => {
-    checkAuthStatusOnMount();
+    initializeStore();
   });
 
-  return { user, isLoggedIn, isAdmin, modalOpen, checkAuthStatusOnMount, logout, openModal };
+  return { user, isLoggedIn, isAdmin, modalOpen, initializeStore, logout, openModal };
 });

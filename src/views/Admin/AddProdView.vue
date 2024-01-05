@@ -21,7 +21,6 @@ const newCategory = ref({
   id: "",
   name: "",
   image: "",
-  items: [],
   uploader: session.user.email,
 });
 const newItems = ref({
@@ -111,6 +110,16 @@ const addGame = async () => {
 
 const addedCategory = ref({ message: "", type: "" });
 const addCategory = async () => {
+  // Check if any of the required fields are empty
+  if (!newCategory.value.id || !newCategory.value.name || !newCategory.value.image) {
+    console.error("Please fill in all required fields.");
+    addedCategory.value = {
+      message: "Please fill in all required fields.",
+      type: "error",
+    };
+    return;
+  }
+
   try {
     // Use the custom ID provided in newCategory.id
     const customId = newCategory.value.id;
@@ -171,15 +180,13 @@ const addItems = async () => {
       // Tambahkan item ke dalam subkoleksi 'products' dan doc 'category'
       const categoryDocRef = doc(productsCollectionRef, newItems.value.category);
 
+      const itemsCollectionRef = collection(categoryDocRef, "items");
+
+      const itemRef = doc(itemsCollectionRef, newItems.value.id);
+      await setDoc(itemRef, newItems.value);
+
       // Get the category data
-      const categoryDoc = await getDoc(categoryDocRef);
-      const categoryData = categoryDoc.data();
 
-      // Tambahkan newItems.value ke dalam array items pada dokumen kategori
-      categoryData.items = [...categoryData.items, newItems.value];
-
-      // Update dokumen kategori dengan array items yang diperbarui
-      await setDoc(categoryDocRef, categoryData);
       itemAdded.value = {
         message: "Item added to 'products' sub-collection in the selected game document.",
         type: "success",
@@ -190,6 +197,13 @@ const addItems = async () => {
   } catch (e) {
     console.error("Error adding item: ", e);
   }
+};
+
+const convertOption = (index) => {
+  const optionString = Newgame.value.method[index].optionString;
+  const options = optionString.split(",");
+  Newgame.value.method[index].options = options;
+  console.log(Newgame.value.method[index].options);
 };
 
 const addMethod = () => {
@@ -204,7 +218,8 @@ const makeOption = (index) => {
   const object = {
     name: Newgame.value.method[index].name,
     type: Newgame.value.method[index].type,
-    options: [""],
+    optionString: "",
+    options: [],
   };
   Newgame.value.method[index] = object;
   console.log(Newgame.value.method[index]);
@@ -300,10 +315,10 @@ onBeforeMount(() => {
             <div class="flex flex-col grow">
               <label for="name"><strong>Method</strong> Type:</label>
               <select
+                @change="Newgame.method[methodIndex - 1].type === 'select' ? makeOption(methodIndex - 1) : deleteOption(methodIndex - 1)"
                 class="bg-slate-700 capitalize p-4 rounded-lg text-lg"
                 :id="'type_' + methodIndex"
                 v-model="Newgame.method[methodIndex - 1].type"
-                @change="Newgame.method[methodIndex - 1].type === 'select' ? makeOption(methodIndex - 1) : deleteOption(methodIndex - 1)"
               >
                 <option class="" selected disabled value="">Select method type</option>
                 <option value="text">text</option>
@@ -317,20 +332,15 @@ onBeforeMount(() => {
           <div class="flex flex-col grow">
             <div v-if="Newgame.method[methodIndex - 1].type === 'select'" class="flex justify-between grow">
               <label for="name"><strong>Select </strong> Option:</label>
-              <button @click="addOption(methodIndex - 1)" type="button" class="group text-lg font-semibold flex gap-2 justify-center">
+              <!-- <button @click="addOption(methodIndex - 1)" type="button" class="group text-lg font-semibold flex gap-2 justify-center">
                 <AddIcon class="w-7 duration-150 group-hover:scale-105" />
                 Add Option
-              </button>
+              </button> -->
+              <span>GUNAKAN "," UNTUK MEMISAHKAN</span>
             </div>
-            <div v-if="Newgame.method[methodIndex - 1].options" class="flex-grow flex gap-3">
-              <input
-                v-for="(option, index) in Newgame.method[methodIndex - 1].options"
-                required
-                type="text"
-                class="bg-slate-700 p-3 rounded-lg text-lg grow"
-                :id="'option_' + index"
-                v-model="Newgame.method[methodIndex - 1].options[index]"
-              />
+            <div v-if="Newgame.method[methodIndex - 1].type === 'select'" class="flex-grow flex gap-3">
+              <!-- v-for="(option, index) in Newgame.method[methodIndex - 1].optionString" -->
+              <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg grow" :id="'option_' + index" @change="convertOption(methodIndex - 1)" v-model="Newgame.method[methodIndex - 1].optionString" />
             </div>
           </div>
         </div>
