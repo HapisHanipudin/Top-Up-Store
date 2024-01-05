@@ -105,6 +105,7 @@ onBeforeMount(() => {
                 <input :value="item.id" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="category" id="category" />
                 <img :src="product.image" alt="" />
                 <label class="text-lg" :for="'category_' + item.id">{{ item.name }}</label>
+                <label class="text-lg" :for="'category_' + item.id">Rp {{ item.price.toLocaleString() }}</label>
               </div>
             </div>
             <div v-else class="bg-slate-700 p-3 rounded-lg">No item added</div>

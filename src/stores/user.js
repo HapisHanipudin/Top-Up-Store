@@ -13,8 +13,8 @@ export const useSessionStore = defineStore("session", () => {
   function checkAuthStatusOnMount() {
     onAuthStateChanged(auth, (userres) => {
       if (userres) {
-        user.value = userres;
         isLoggedIn.value = true;
+        user.value = userres;
         if (admins.includes(user.value.email)) {
           isAdmin.value = true;
         }

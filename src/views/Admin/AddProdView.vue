@@ -15,8 +15,8 @@ const Newgame = ref({
   uploader: session.user.email,
   method: [{ name: "", type: "" }],
 });
-const itemAdded = ref(false);
-const gameAdded = ref(false);
+const itemAdded = ref({ message: "", type: "" });
+const gameAdded = ref({ message: "", type: "" });
 const newCategory = ref({
   id: "",
   name: "",
@@ -77,8 +77,17 @@ const handleFileUpload = async (event, type) => {
 
 const addGame = async () => {
   try {
+    // Check if any of the required fields are empty
+    if (!Newgame.value.id || !Newgame.value.name || !Newgame.value.desc || !Newgame.value.image) {
+      console.error("Please fill in all required fields.");
+      gameAdded.value = {
+        message: "Please fill in all required fields.",
+        type: "error",
+      };
+      return;
+    }
+
     // Use the custom ID provided in Newgame.id
-    console.log(Newgame.value);
     const customId = Newgame.value.id;
 
     // Create a reference to the document with the custom ID
@@ -89,7 +98,10 @@ const addGame = async () => {
 
     newItems.game = customId;
 
-    gameAdded.value = true;
+    gameAdded.value = {
+      message: "Document with custom ID added: " + customId,
+      type: "success",
+    };
 
     console.log("Document with custom ID added: ", customId);
   } catch (e) {
@@ -97,7 +109,7 @@ const addGame = async () => {
   }
 };
 
-const addedCategory = ref(false);
+const addedCategory = ref({ message: "", type: "" });
 const addCategory = async () => {
   try {
     // Use the custom ID provided in newCategory.id
@@ -120,39 +132,61 @@ const addCategory = async () => {
 
     // Update addedCategory.value to indicate success
     console.log("Document with custom ID added: ", customId);
-    addedCategory.value = `Document with custom ID added: ${customId}`;
+    addedCategory.value = {
+      message: "Document with custom ID added: " + customId,
+      type: "success",
+    };
   } catch (e) {
     console.error("Error adding document: ", e);
     // You may want to add additional error handling here
     // For example, updating addedCategory.value to indicate an error
-    addedCategory.value = `Error adding document: ${e.message}`;
+    addedCategory.value = {
+      message: `Error adding document: ${e.message}`,
+      type: "error",
+    };
   }
 };
 
 const addItems = async () => {
   try {
-    // Gunakan ID kustom yang diberikan pada newItems.id
+    // Check if any of the required fields are empty
+    if (!newItems.value.id || !newItems.value.name || !newItems.value.price || !newItems.value.game || !newItems.value.category) {
+      console.error("Please fill in all required fields.");
+      itemAdded.value = {
+        message: "Please fill in all required fields.",
+        type: "error",
+      };
 
-    // Referensi ke dokumen game yang dipilih
-    const selectedGameRef = doc(db, "game", newItems.value.game); // Assuming 'game' is your collection name
+      return;
+    }
+    try {
+      // Gunakan ID kustom yang diberikan pada newItems.id
 
-    // Referensi ke subkoleksi 'products' pada dokumen game yang dipilih
-    const productsCollectionRef = collection(selectedGameRef, "products");
+      // Referensi ke dokumen game yang dipilih
+      const selectedGameRef = doc(db, "game", newItems.value.game); // Assuming 'game' is your collection name
 
-    // Tambahkan item ke dalam subkoleksi 'products' dan doc 'category'
-    const categoryDocRef = doc(productsCollectionRef, newItems.value.category);
+      // Referensi ke subkoleksi 'products' pada dokumen game yang dipilih
+      const productsCollectionRef = collection(selectedGameRef, "products");
 
-    // Get the category data
-    const categoryDoc = await getDoc(categoryDocRef);
-    const categoryData = categoryDoc.data();
+      // Tambahkan item ke dalam subkoleksi 'products' dan doc 'category'
+      const categoryDocRef = doc(productsCollectionRef, newItems.value.category);
 
-    // Tambahkan newItems.value ke dalam array items pada dokumen kategori
-    categoryData.items = [...categoryData.items, newItems.value];
+      // Get the category data
+      const categoryDoc = await getDoc(categoryDocRef);
+      const categoryData = categoryDoc.data();
 
-    // Update dokumen kategori dengan array items yang diperbarui
-    await setDoc(categoryDocRef, categoryData);
+      // Tambahkan newItems.value ke dalam array items pada dokumen kategori
+      categoryData.items = [...categoryData.items, newItems.value];
 
-    itemAdded.value = "Item added to 'products' sub-collection in the selected game document.";
+      // Update dokumen kategori dengan array items yang diperbarui
+      await setDoc(categoryDocRef, categoryData);
+      itemAdded.value = {
+        message: "Item added to 'products' sub-collection in the selected game document.",
+        type: "success",
+      };
+    } catch (e) {
+      console.error("Error adding item: ", e);
+    }
   } catch (e) {
     console.error("Error adding item: ", e);
   }
@@ -198,7 +232,7 @@ onBeforeMount(() => {
       <select @change="getCategories" required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.game">
         <option selected disabled value="">Select game</option>
         <option v-for="game in games" :key="game.id" :value="game.id"><img :src="game.image" alt="" /> {{ game.name }}</option>
-        <option selected v-if="gameAdded" :value="Newgame.id">{{ Newgame.name }}</option>
+        <option selected v-if="gameAdded.type == 'success'" :value="Newgame.id">{{ Newgame.name }}</option>
         <option value="add">
           <span class="flex gap-3"><AddIcon />Add new game</span>
         </option>
@@ -209,12 +243,12 @@ onBeforeMount(() => {
         <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.category">
           <option selected disabled value="">Select category</option>
           <option v-for="category in categories" :key="category.id" :value="category.id"><img :src="category.image" alt="" /> {{ category.name }}</option>
-          <option selected v-if="addedCategory" :value="newCategory.id">{{ newCategory.name }}</option>
+          <option selected v-if="addedCategory.type == 'success'" :value="newCategory.id">{{ newCategory.name }}</option>
           <option value="add">
             <span class="flex gap-3"><AddIcon />Add new category</span>
           </option>
         </select>
-        <div class="flex flex-col grow" v-if="newItems.category == 'add'">
+        <div class="flex flex-col grow gap-3" v-if="newItems.category == 'add'">
           <div class="flex gap-3">
             <div class="flex flex-col grow">
               <label for="id"><strong>Category</strong> ID:</label>
@@ -234,8 +268,8 @@ onBeforeMount(() => {
             <img v-if="newCategory.image" :src="newCategory.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
           </div>
           <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCategory">Add Category</button>
-          <div v-if="addedCategory" class="bg-green-300 rounded-lg text-black p-5">
-            <span>Game Succesfully added with ID: {{ addedCategory }}</span>
+          <div v-if="addedCategory.message" :class="addedCategory.type == 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
+            <span>{{ addedCategory.message }}</span>
           </div>
         </div>
       </div>
@@ -312,8 +346,8 @@ onBeforeMount(() => {
           <img v-if="Newgame.image" :src="Newgame.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
         </div>
         <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addGame">Add Game</button>
-        <div v-if="gameAdded" class="bg-green-300 rounded-lg text-black p-5">
-          <span>Game Succesfully added with ID: {{ gameAdded }}</span>
+        <div v-if="gameAdded.message" :class="gameAdded.type === 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
+          <span>{{ gameAdded.message }}</span>
         </div>
       </div>
       <div class="flex gap-3">
@@ -332,8 +366,8 @@ onBeforeMount(() => {
       </div>
 
       <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addItems">Add Items</button>
-      <div v-if="itemAdded" class="bg-green-300 rounded-lg text-black p-5">
-        <span>{{ itemAdded }} in </span>
+      <div v-if="itemAdded.message" :class="itemAdded.type === 'success' ? 'bg-green-300' : 'bg-red-300'" class="rounded-lg text-black p-5">
+        <span>{{ itemAdded.message }} in </span>
       </div>
     </form>
   </div>
