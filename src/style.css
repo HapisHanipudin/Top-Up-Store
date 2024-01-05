@@ -1,0 +1,14 @@
+@import url("https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .nav-link {
+    @apply cursor-pointer hover:underline opacity-70 hover:opacity-85 hover:scale-110 duration-200 ease-in-out;
+  }
+  .nav-link.router-link-active {
+    @apply opacity-100;
+  }
+}
