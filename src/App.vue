@@ -8,7 +8,7 @@ const session = useSessionStore();
 </script>
 
 <template>
-  <div class="flex font-josefin flex-col-reverse lg:flex-row h-full w-full text-white">
+  <div class="flex font-saans flex-col-reverse lg:flex-row h-full w-full text-white">
     <LogReg v-if="!session.isLoggedIn" />
     <SideBar />
     <div class="bg-slate-800 max-lg:pb-24 justify-center flex items-start min-h-screen overflow-hidden w-full">

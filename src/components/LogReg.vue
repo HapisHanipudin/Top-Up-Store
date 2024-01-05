@@ -1,8 +1,29 @@
 <script setup>
-import router from "@/router";
+import { auth } from "@/firebase/init";
 import LoginForm from "./LoginForm.vue";
 import RegisterForm from "./RegisterForm.vue";
 import { useSessionStore } from "@/stores/user";
+import { onAuthStateChanged } from "firebase/auth";
+import { useRouter, useRoute } from "vue-router";
+import { onBeforeMount } from "vue";
+import { ref } from "vue";
+
+const $route = useRoute();
+const router = useRouter();
+
+const sessionCheck = () => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      if ($route.path.includes("/login")) {
+        router.push("/");
+      }
+    }
+  });
+};
+
+onBeforeMount(() => {
+  sessionCheck();
+});
 
 const session = useSessionStore();
 </script>

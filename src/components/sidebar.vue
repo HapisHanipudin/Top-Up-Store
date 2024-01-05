@@ -29,7 +29,7 @@ const toggleProfileDropdown = () => {
           >
             <button @click="session.logout" class="flex"><LogoutIcon class="nav-link w-10" />Sign Out</button>
           </div>
-          <img class="w-10 rounded-full" :src="session.user.photoURL ? session.user.photoURL : 'https://ui-avatars.com/api/?name=' + session.user.displayName + '&background=random'" alt="" />
+          <img class="w-10 rounded-full" :src="session.user.photoURL ? session.user.photoURL : 'https://avatar.oxro.io/avatar.png?name=' + session.user.displayName + '&background=random'" alt="" />
         </button>
         <button @click="session.openModal('login')" v-if="!session.isLoggedIn" class=" "><LoginIcon class="nav-link w-10" /></button>
       </div>

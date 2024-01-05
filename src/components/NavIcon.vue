@@ -34,13 +34,13 @@ const isActive = (path) => {
     ></div>
     <RouterLink class="home w-9 h-9 nav-link relative" to="/"><HomeIcon class="home" /></RouterLink>
     <RouterLink class="products w-9 h-9 nav-link relative" to="/products"><ProductIcon class="product" /></RouterLink>
-    <RouterLink class="cart w-9 h-9 nav-link relative" to="/cart"
+    <RouterLink v-if="session.user" class="cart w-9 h-9 nav-link relative" to="/cart"
       ><CartIcon class="cart" />
       <div v-if="cart > 0" class="p-1 bg-red-600 rounded-full absolute -top-1 -right-1">
         <!-- <span class="text-xs">{{ cart }}</span> -->
       </div>
     </RouterLink>
-    <RouterLink class="trans w-9 h-9 nav-link relative" to="/transaction"
+    <RouterLink v-if="session.user" class="trans w-9 h-9 nav-link relative" to="/transaction"
       ><TransactionIcon class="trans" />
       <div v-if="transaction" class="p-1 bg-red-600 rounded-full absolute -top-1 -right-1"></div>
     </RouterLink>

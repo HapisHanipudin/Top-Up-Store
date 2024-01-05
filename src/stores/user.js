@@ -1,9 +1,11 @@
 import { ref, onBeforeMount } from "vue";
 import { defineStore } from "pinia";
+import { useRouter } from "vue-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/firebase/init";
 
 export const useSessionStore = defineStore("session", () => {
+  const router = useRouter();
   const user = ref({});
   const isLoggedIn = ref(false);
   const isAdmin = ref(false);
@@ -31,6 +33,13 @@ export const useSessionStore = defineStore("session", () => {
     modalOpen.value = modal;
   }
 
+  function check() {
+    if (!isLoggedIn.value) {
+      router.push("/");
+      modalOpen.value = "login";
+    }
+  }
+
   function logout() {
     signOut(auth)
       .then(() => {
@@ -49,5 +58,5 @@ export const useSessionStore = defineStore("session", () => {
     initializeStore();
   });
 
-  return { user, isLoggedIn, isAdmin, modalOpen, initializeStore, logout, openModal };
+  return { user, isLoggedIn, isAdmin, modalOpen, initializeStore, logout, openModal, check };
 });

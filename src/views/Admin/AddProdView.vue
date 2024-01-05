@@ -253,51 +253,15 @@ onBeforeMount(() => {
         </option>
       </select>
 
-      <div class="flex flex-col gap-3" v-if="newItems.game && newItems.game != 'add'">
-        <label for="Games">Currency</label>
-        <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.currency">
-          <option selected disabled value="">Select currency</option>
-          <option v-for="currency in categories" :key="currency.id" :value="currency.id"><img :src="currency.image" alt="" /> {{ currency.name }}</option>
-          <option selected v-if="addedCategory.type == 'success'" :value="newCategory.id">{{ newCategory.name }}</option>
-          <option value="add">
-            <span class="flex gap-3"><AddIcon />Add new currency</span>
-          </option>
-        </select>
-        <div class="flex flex-col grow gap-3" v-if="newItems.currency == 'add'">
-          <div class="flex gap-3">
-            <div class="flex flex-col grow">
-              <label for="id"><strong>Currency</strong> ID:</label>
-              <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newCategory.id" />
-            </div>
-            <div class="flex flex-col grow">
-              <label for="name"><strong>Currency</strong> Name:</label>
-              <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newCategory.name" />
-            </div>
-          </div>
-          <div class="flex max-h-60 max-w-60">
-            <div>
-              <label for="image"><strong>Currency</strong> Image:</label>
-              <input required type="file" class="p-3 file:p-2 file:bg-slate-700 file:rounded-full file:border-0 file:hover:bg-slate-600 file:me-3 file:px-4 file:text-white" id="image" @change="handleFileUpload($event, 'currency')" />
-            </div>
-            <div></div>
-            <img v-if="newCategory.image" :src="newCategory.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
-          </div>
-          <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCategory">Add Currency</button>
-          <div v-if="addedCategory.message" :class="addedCategory.type == 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
-            <span>{{ addedCategory.message }}</span>
-          </div>
-        </div>
-      </div>
-
       <div class="flex flex-col gap-3" v-if="newItems.game == 'add'">
         <div class="flex gap-3">
           <div class="flex flex-col grow">
             <label for="id"><strong>Game</strong> ID:</label>
-            <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="Newgame.id" />
+            <input placeholder="e.g. GENSHIN *No space or special characters" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="Newgame.id" />
           </div>
           <div class="flex flex-col grow">
             <label for="name"><strong>Game</strong> Name:</label>
-            <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="Newgame.name" />
+            <input placeholder="Enter game name" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="Newgame.name" />
           </div>
         </div>
         <div class="flex-grow flex flex-row-reverse">
@@ -310,7 +274,7 @@ onBeforeMount(() => {
           <div class="flex gap-3 items-center">
             <div class="flex flex-col grow">
               <label for="id"><strong>Game</strong> Method Name:</label>
-              <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" :id="'id_' + methodIndex" v-model="Newgame.method[methodIndex - 1].name" />
+              <input placeholder='Will be displayed in the form "Enter/Select your <method-name>"' required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" :id="'id_' + methodIndex" v-model="Newgame.method[methodIndex - 1].name" />
             </div>
             <div class="flex flex-col grow">
               <label for="name"><strong>Method</strong> Type:</label>
@@ -340,18 +304,32 @@ onBeforeMount(() => {
             </div>
             <div v-if="Newgame.method[methodIndex - 1].type === 'select'" class="flex-grow flex gap-3">
               <!-- v-for="(option, index) in Newgame.method[methodIndex - 1].optionString" -->
-              <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg grow" :id="'option_' + index" @change="convertOption(methodIndex - 1)" v-model="Newgame.method[methodIndex - 1].optionString" />
+              <input
+                placeholder='Enter option (Use "," to add new option)'
+                required
+                type="text"
+                class="bg-slate-700 p-3 rounded-lg text-lg grow"
+                :id="'option_' + index"
+                @change="convertOption(methodIndex - 1)"
+                v-model="Newgame.method[methodIndex - 1].optionString"
+              />
             </div>
           </div>
         </div>
         <div class="flex flex-col grow">
           <label for="name"><strong>Game</strong> Description:</label>
-          <textarea required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="Newgame.desc" />
+          <textarea placeholder="Enter game description" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="Newgame.desc" />
         </div>
         <div class="flex max-h-60 max-w-60">
           <div>
             <label for="image"><strong>Game</strong> Image:</label>
-            <input required type="file" class="p-3 file:p-2 file:bg-slate-700 file:rounded-full file:border-0 file:hover:bg-slate-600 file:me-3 file:px-4 file:text-white" id="image" @change="handleFileUpload($event, 'game')" />
+            <input
+              required
+              type="file"
+              class="p-3 file:p-2 file:font-josefin file:bg-slate-700 file:rounded-full file:border-0 file:hover:bg-slate-600 file:me-3 file:px-4 file:text-white"
+              id="image"
+              @change="handleFileUpload($event, 'game')"
+            />
           </div>
           <img v-if="Newgame.image" :src="Newgame.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
         </div>
@@ -360,14 +338,58 @@ onBeforeMount(() => {
           <span>{{ gameAdded.message }}</span>
         </div>
       </div>
+
+      <div class="flex flex-col gap-3" v-if="newItems.game && newItems.game != 'add'">
+        <label for="Games">Currency</label>
+        <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.currency">
+          <option selected disabled value="">Select currency</option>
+          <option v-for="currency in categories" :key="currency.id" :value="currency.id"><img :src="currency.image" alt="" /> {{ currency.name }}</option>
+          <option selected v-if="addedCategory.type == 'success'" :value="newCategory.id">{{ newCategory.name }}</option>
+          <option value="add">
+            <span class="flex gap-3"><AddIcon />Add new currency</span>
+          </option>
+        </select>
+        <div class="flex flex-col grow gap-3" v-if="newItems.currency == 'add'">
+          <div class="flex gap-3">
+            <div class="flex flex-col grow">
+              <label for="id"><strong>Currency</strong> ID:</label>
+              <input placeholder="e.g. GCRYSTAL *No Spaces or Special Characters" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newCategory.id" />
+            </div>
+            <div class="flex flex-col grow">
+              <label for="name"><strong>Currency</strong> Name:</label>
+              <input placeholder="Enter currency name" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newCategory.name" />
+            </div>
+          </div>
+          <div class="flex max-h-60 max-w-60">
+            <div>
+              <label for="image"><strong>Currency</strong> Image:</label>
+              <input
+                placeholder="Enter currency image URL"
+                required
+                type="file"
+                class="p-3 file:p-2 file:bg-slate-700 file:font-josefin file:rounded-full file:border-0 file:hover:bg-slate-600 file:me-3 file:px-4 file:text-white"
+                id="image"
+                @change="handleFileUpload($event, 'currency')"
+              />
+            </div>
+            <div></div>
+            <img v-if="newCategory.image" :src="newCategory.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
+          </div>
+          <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCategory">Add Currency</button>
+          <div v-if="addedCategory.message" :class="addedCategory.type == 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
+            <span>{{ addedCategory.message }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="flex gap-3">
         <div class="flex flex-col grow">
           <label for="id"><strong>Item</strong> ID:</label>
-          <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newItems.id" />
+          <input placeholder="e.g. 2400 *Better to fill it with the amount" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newItems.id" />
         </div>
         <div class="flex flex-col grow">
           <label for="name"><strong>Item</strong> Name:</label>
-          <input required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newItems.name" />
+          <input placeholder="Enter item name" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newItems.name" />
         </div>
       </div>
       <div class="flex flex-col grow">

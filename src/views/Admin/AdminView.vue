@@ -11,18 +11,28 @@
   <RouterView />
 </template>
 
-<script>
-export default {
-  name: "AdminView",
-  data() {
-    return {
-      games: [],
-    };
-  },
-  methods: {
-    isActive(path) {
-      return this.$route.path.includes(path);
-    },
-  },
+<script setup>
+import { onBeforeMount } from "vue";
+import { useSessionStore } from "@/stores/user";
+import { useRouter, useRoute } from "vue-router";
+import { auth } from "@/firebase/init";
+import { onAuthStateChanged } from "firebase/auth";
+
+const $route = useRoute();
+const $router = useRouter();
+const session = useSessionStore();
+const isActive = (path) => {
+  return $route.path.includes(path);
 };
+const sessionCheck = () => {
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      $router.push("/login");
+    }
+  });
+};
+
+onBeforeMount(() => {
+  sessionCheck();
+});
 </script>
