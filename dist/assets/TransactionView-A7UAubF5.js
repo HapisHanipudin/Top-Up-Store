@@ -1,0 +1,1 @@
+import{a as n,f as o,g as a,I as c,o as r,J as i}from"./index-jbwhbzbo.js";const u={class:"flex items-center justify-center"},l={__name:"TransactionView",setup(_){const t=n(),s=()=>{c(i,e=>{e||t.push("/login")})};return o(()=>{s()}),(e,f)=>(r(),a("div",u,"ini transaction"))}};export{l as default};

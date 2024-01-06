@@ -12,12 +12,24 @@ const router = createRouter({
     {
       path: "/products",
       name: "products",
-      component: () => import("../views/ProductsView.vue"),
-    },
-    {
-      path: "/products/:id",
-      name: "product",
-      component: () => import("../views/ItemView.vue"),
+      component: () => import("../views/ProductsMainView.vue"),
+      children: [
+        {
+          path: "",
+          name: "products",
+          component: () => import("../views/ProductsView.vue"),
+        },
+        {
+          path: "/products/:id",
+          name: "product",
+          component: () => import("../views/ItemView.vue"),
+        },
+        {
+          path: "/products/category/:cat",
+          name: "category",
+          component: () => import("../views/ProductsView.vue"),
+        },
+      ],
     },
     {
       path: "/cart",
@@ -58,6 +70,11 @@ const router = createRouter({
           path: "item/:id",
           name: "item",
           component: () => import("../views/Admin/ItemView.vue"),
+        },
+        {
+          path: "instant",
+          name: "edit-product",
+          component: () => import("../views/Admin/adminInstant.vue"),
         },
       ],
     },

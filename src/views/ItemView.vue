@@ -1,26 +1,58 @@
 <script setup>
-import { ref, onBeforeMount, onMounted } from "vue";
+import { ref, onBeforeMount } from "vue";
 import { db } from "@/firebase/init";
-import { getDoc, getDocs, doc, collection, query, where } from "firebase/firestore";
-import { useRoute } from "vue-router";
+import { getDoc, getDocs, doc, collection, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { useRoute, useRouter } from "vue-router";
 import { useSessionStore } from "@/stores/user";
 
 const session = useSessionStore();
 const $route = useRoute();
+const $router = useRouter();
 
 const cart = ref({
-  id: "",
-  name: "",
   game: {},
   currency: {},
   item: {},
   loginMethod: {},
   qty: 1,
-  user: session.user,
+  user: "",
 });
 
-const addToCart = () => {
-  console.log(cart.value);
+const addToCart = async () => {
+  // Check if necessary properties are selected
+  if (!cart.value.currency || !cart.value.item || !cart.value.loginMethod) {
+    alert("Please select currency and item");
+    return;
+  }
+
+  const thisCart = { ...cart.value }; // Create a shallow copy for clarity
+  const cartCollection = collection(db, "cart");
+
+  // Get references to the game, currency, and item documents
+  const gameRef = doc(db, "game", $route.params.id);
+  const currencyRef = doc(gameRef, "products", cart.value.currency.id);
+  const itemRef = doc(currencyRef, "items", cart.value.item.id);
+
+  // Update the cart object with the document references
+  thisCart.item = itemRef;
+  thisCart.game = gameRef;
+  thisCart.currency = currencyRef;
+  thisCart.user = session.user.uid;
+  thisCart.timestamp = serverTimestamp();
+
+  try {
+    // Add the cart object to the user's cart document
+    const docRef = await addDoc(cartCollection, thisCart);
+    console.log("Post added with ID: ", docRef.id);
+
+    // Update the item document with the cart ID
+    await setDoc(itemRef, { cartId: docRef.id }, { merge: true });
+
+    // Redirect to the cart page
+    $router.push("/cart");
+  } catch (error) {
+    console.error("Error adding post: ", error);
+  }
 };
 
 const product = ref({
@@ -48,9 +80,7 @@ const getGame = async () => {
       cart.value.currency = cart.value.game.products[0];
       getItems();
     }
-  } catch (error) {
-    // console.error("Error fetching game data:", error);
-  }
+  } catch (error) {}
 };
 
 const getItems = async () => {
@@ -104,7 +134,6 @@ onBeforeMount(() => {
             <label for="currency">Currency</label>
             <div class="flex gap-3">
               <div
-                v-if="cart.game.products.length > 0"
                 v-for="product in cart.game.products"
                 :key="product.id"
                 :class="cart.currency.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
@@ -114,7 +143,7 @@ onBeforeMount(() => {
                 <img :src="product.image" alt="" />
                 <label class="text-lg" :for="'category_' + product">{{ product.name }}</label>
               </div>
-              <div v-else class="flex flex-col relative w-4/12 p-3 rounded-xl items-center text-center bg-slate-600">
+              <div v-if="cart.game.products.length == 0" class="flex flex-col relative w-4/12 p-3 rounded-xl items-center text-center bg-slate-600">
                 <label class="text-lg">No items found</label>
               </div>
             </div>
@@ -144,8 +173,8 @@ onBeforeMount(() => {
             </div>
           </div>
           <div>
-            <button v-if="session.isLoggedIn" @click="addToCart" class="bg-slate-700 text-xl p-3 rounded-xl">Add to cart</button>
-            <button v-if="!session.isLoggedIn" @click="session.openModal('login')" class="bg-slate-700 text-xl p-3 rounded-xl">Log In First</button>
+            <button type="button" v-if="session.isLoggedIn" @click="addToCart" class="bg-slate-700 text-xl p-3 rounded-xl">Add to cart</button>
+            <button type="button" v-if="!session.isLoggedIn" @click="session.openModal('login')" class="bg-slate-700 text-xl p-3 rounded-xl">Log In First</button>
           </div>
         </form>
       </div>

@@ -14,10 +14,11 @@ const Newgame = ref({
   image: "", // Will store the download URL of the uploaded image
   uploader: session.user.email,
   method: [{ name: "", type: "" }],
+  categories: ["All Products", ""],
 });
 const itemAdded = ref({ message: "", type: "" });
 const gameAdded = ref({ message: "", type: "" });
-const newCategory = ref({
+const newCurrency = ref({
   id: "",
   name: "",
   image: "",
@@ -42,7 +43,7 @@ const getGames = async () => {
   // console.log(games.value);
 };
 
-const getCategories = async () => {
+const getCurrencies = async () => {
   const q = query(collection(db, "game", newItems.value.game, "products"));
   const querySnapshot = await getDocs(q);
   categories.value = querySnapshot.docs.map((doc) => doc.data());
@@ -66,7 +67,7 @@ const handleFileUpload = async (event, type) => {
       if (type === "game") {
         Newgame.value.image = downloadURL;
       } else {
-        newCategory.value.image = downloadURL;
+        newCurrency.value.image = downloadURL;
       }
     } catch (error) {
       console.error("Error uploading file: ", error);
@@ -108,12 +109,12 @@ const addGame = async () => {
   }
 };
 
-const addedCategory = ref({ message: "", type: "" });
-const addCategory = async () => {
+const addedCurrency = ref({ message: "", type: "" });
+const addCurrency = async () => {
   // Check if any of the required fields are empty
-  if (!newCategory.value.id || !newCategory.value.name || !newCategory.value.image) {
+  if (!newCurrency.value.id || !newCurrency.value.name || !newCurrency.value.image) {
     console.error("Please fill in all required fields.");
-    addedCategory.value = {
+    addedCurrency.value = {
       message: "Please fill in all required fields.",
       type: "error",
     };
@@ -121,8 +122,8 @@ const addCategory = async () => {
   }
 
   try {
-    // Use the custom ID provided in newCategory.id
-    const customId = newCategory.value.id;
+    // Use the custom ID provided in newCurrency.id
+    const customId = newCurrency.value.id;
 
     // Create a reference to the game document
     const gameDocRef = doc(db, "game", newItems.value.game);
@@ -131,25 +132,25 @@ const addCategory = async () => {
     const productsCollectionRef = collection(gameDocRef, "products");
 
     // Create a reference to the currency document within the 'products' collection
-    const categoryRef = doc(productsCollectionRef, customId);
+    const currencyRef = doc(productsCollectionRef, customId);
 
     // Upload the document with the custom ID to the currency reference
-    await setDoc(categoryRef, newCategory.value);
+    await setDoc(currencyRef, newCurrency.value);
 
     // Update newItems.currency with the path to the added currency
     newItems.value.currency = customId;
 
-    // Update addedCategory.value to indicate success
+    // Update addedCurrency.value to indicate success
     console.log("Document with custom ID added: ", customId);
-    addedCategory.value = {
+    addedCurrency.value = {
       message: "Document with custom ID added: " + customId,
       type: "success",
     };
   } catch (e) {
     console.error("Error adding document: ", e);
     // You may want to add additional error handling here
-    // For example, updating addedCategory.value to indicate an error
-    addedCategory.value = {
+    // For example, updating addedCurrency.value to indicate an error
+    addedCurrency.value = {
       message: `Error adding document: ${e.message}`,
       type: "error",
     };
@@ -178,9 +179,9 @@ const addItems = async () => {
       const productsCollectionRef = collection(selectedGameRef, "products");
 
       // Tambahkan item ke dalam subkoleksi 'products' dan doc 'currency'
-      const categoryDocRef = doc(productsCollectionRef, newItems.value.currency);
+      const currencyDocRef = doc(productsCollectionRef, newItems.value.currency);
 
-      const itemsCollectionRef = collection(categoryDocRef, "items");
+      const itemsCollectionRef = collection(currencyDocRef, "items");
 
       const itemRef = doc(itemsCollectionRef, newItems.value.id);
       await setDoc(itemRef, newItems.value);
@@ -244,7 +245,7 @@ onBeforeMount(() => {
     <h1 class="text-2xl font-bold">Add Product</h1>
     <form class="flex flex-col gap-4">
       <label for="Games">Game</label>
-      <select @change="getCategories" required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.game">
+      <select @change="getCurrencies" required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.game">
         <option selected disabled value="">Select game</option>
         <option v-for="game in games" :key="game.id" :value="game.id"><img :src="game.image" alt="" /> {{ game.name }}</option>
         <option selected v-if="gameAdded.type == 'success'" :value="Newgame.id">{{ Newgame.name }}</option>
@@ -344,7 +345,7 @@ onBeforeMount(() => {
         <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.currency">
           <option selected disabled value="">Select currency</option>
           <option v-for="currency in categories" :key="currency.id" :value="currency.id"><img :src="currency.image" alt="" /> {{ currency.name }}</option>
-          <option selected v-if="addedCategory.type == 'success'" :value="newCategory.id">{{ newCategory.name }}</option>
+          <option selected v-if="addedCurrency.type == 'success'" :value="newCurrency.id">{{ newCurrency.name }}</option>
           <option value="add">
             <span class="flex gap-3"><AddIcon />Add new currency</span>
           </option>
@@ -353,11 +354,11 @@ onBeforeMount(() => {
           <div class="flex gap-3">
             <div class="flex flex-col grow">
               <label for="id"><strong>Currency</strong> ID:</label>
-              <input placeholder="e.g. GCRYSTAL *No Spaces or Special Characters" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newCategory.id" />
+              <input placeholder="e.g. GCRYSTAL *No Spaces or Special Characters" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="id" v-model="newCurrency.id" />
             </div>
             <div class="flex flex-col grow">
               <label for="name"><strong>Currency</strong> Name:</label>
-              <input placeholder="Enter currency name" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newCategory.name" />
+              <input placeholder="Enter currency name" required type="text" class="bg-slate-700 p-3 rounded-lg text-lg" id="name" v-model="newCurrency.name" />
             </div>
           </div>
           <div class="flex max-h-60 max-w-60">
@@ -373,11 +374,11 @@ onBeforeMount(() => {
               />
             </div>
             <div></div>
-            <img v-if="newCategory.image" :src="newCategory.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
+            <img v-if="newCurrency.image" :src="newCurrency.image" class="" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px" />
           </div>
-          <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCategory">Add Currency</button>
-          <div v-if="addedCategory.message" :class="addedCategory.type == 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
-            <span>{{ addedCategory.message }}</span>
+          <button type="button" class="bg-blue-700 p-3 rounded-lg text-lg" @click="addCurrency">Add Currency</button>
+          <div v-if="addedCurrency.message" :class="addedCurrency.type == 'success' ? 'bg-green-500' : 'bg-red-500'" class="rounded-lg text-black p-5">
+            <span>{{ addedCurrency.message }}</span>
           </div>
         </div>
       </div>

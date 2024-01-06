@@ -10,7 +10,7 @@ export const useSessionStore = defineStore("session", () => {
   const isLoggedIn = ref(false);
   const isAdmin = ref(false);
   const modalOpen = ref("");
-  const admins = ["hapis.hanipuddin@gmail.com"];
+  const admins = ["hapis.hanipuddin@gmail.com", "msauqi.ihsan324@gmail.com", "aqielsyafiq11@gmail.com", "tubagusalif1504@gmail.com", "ahmadtaqi999@gmail.com"];
 
   // Move your logic to a separate function
   const initializeStore = () => {
