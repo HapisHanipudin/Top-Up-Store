@@ -7,14 +7,14 @@ import { collection, doc, setDoc, query, getDocs, addDoc, getDoc } from "firebas
 import { uploadBytes, getDownloadURL, ref as refStorage } from "firebase/storage";
 
 const session = useSessionStore();
-
+const categoryString = ref("");
 const Newgame = ref({
   id: "",
   name: "",
   image: "", // Will store the download URL of the uploaded image
   uploader: session.user.email,
   method: [{ name: "", type: "" }],
-  categories: ["All Products", ""],
+  categories: ["All Products"],
 });
 const itemAdded = ref({ message: "", type: "" });
 const gameAdded = ref({ message: "", type: "" });
@@ -34,7 +34,7 @@ const newItems = ref({
 });
 
 const games = ref([]);
-const categories = ref([]);
+const currencies = ref([]);
 
 const getGames = async () => {
   const q = query(collection(db, "game"));
@@ -46,7 +46,7 @@ const getGames = async () => {
 const getCurrencies = async () => {
   const q = query(collection(db, "game", newItems.value.game, "products"));
   const querySnapshot = await getDocs(q);
-  categories.value = querySnapshot.docs.map((doc) => doc.data());
+  currencies.value = querySnapshot.docs.map((doc) => doc.data());
 };
 
 const handleFileUpload = async (event, type) => {
@@ -103,7 +103,7 @@ const addGame = async () => {
       type: "success",
     };
 
-    console.log("Document with custom ID added: ", customId);
+    // console.log("Document with custom ID added: ", customId);
   } catch (e) {
     console.error("Error adding document: ", e);
   }
@@ -141,7 +141,7 @@ const addCurrency = async () => {
     newItems.value.currency = customId;
 
     // Update addedCurrency.value to indicate success
-    console.log("Document with custom ID added: ", customId);
+    // console.log("Document with custom ID added: ", customId);
     addedCurrency.value = {
       message: "Document with custom ID added: " + customId,
       type: "success",
@@ -200,16 +200,29 @@ const addItems = async () => {
   }
 };
 
+const convertCategory = () => {
+  const category = categoryString.value.trim().split(",");
+  category.unshift("All Products");
+  const categoriesWithoutSpaces = category.map((category) => category.trim());
+  Newgame.value.categories = categoriesWithoutSpaces;
+  // console.log(Newgame.value.method[index].currencies);
+};
+
 const convertOption = (index) => {
   const optionString = Newgame.value.method[index].optionString;
-  const options = optionString.split(",");
-  Newgame.value.method[index].options = options;
-  console.log(Newgame.value.method[index].options);
+  const options = optionString.trim().split(",");
+  const optionsWithoutSpaces = options.map((option) => option.trim());
+  Newgame.value.method[index].options = optionsWithoutSpaces;
+  // console.log(Newgame.value.method[index].options);
 };
 
 const addMethod = () => {
   // Menambahkan objek method baru ke dalam array Newgame.value.method
   Newgame.value.method.push({ name: "", type: "" });
+};
+
+const deleteMethod = (index) => {
+  Newgame.value.method.splice(index, 1);
 };
 
 const addOption = (index) => {
@@ -223,7 +236,7 @@ const makeOption = (index) => {
     options: [],
   };
   Newgame.value.method[index] = object;
-  console.log(Newgame.value.method[index]);
+  // console.log(Newgame.value.method[index]);
 };
 
 const deleteOption = (index) => {
@@ -232,7 +245,7 @@ const deleteOption = (index) => {
     type: Newgame.value.method[index].type,
   };
   Newgame.value.method[index] = object;
-  console.log(Newgame.value.method[index]);
+  // console.log(Newgame.value.method[index]);
 };
 
 onBeforeMount(() => {
@@ -301,7 +314,7 @@ onBeforeMount(() => {
                 <AddIcon class="w-7 duration-150 group-hover:scale-105" />
                 Add Option
               </button> -->
-              <span>GUNAKAN "," UNTUK MEMISAHKAN</span>
+              <!-- <span>GUNAKAN "," UNTUK MEMISAHKAN</span> -->
             </div>
             <div v-if="Newgame.method[methodIndex - 1].type === 'select'" class="flex-grow flex gap-3">
               <!-- v-for="(option, index) in Newgame.method[methodIndex - 1].optionString" -->
@@ -311,10 +324,16 @@ onBeforeMount(() => {
                 type="text"
                 class="bg-slate-700 p-3 rounded-lg text-lg grow"
                 :id="'option_' + index"
-                @change="convertOption(methodIndex - 1)"
+                @keyup="convertOption(methodIndex - 1)"
                 v-model="Newgame.method[methodIndex - 1].optionString"
               />
             </div>
+          </div>
+        </div>
+        <div>
+          <div class="flex-col flex gap-3">
+            <label for="">Game Categories</label>
+            <input @keyup="convertCategory" v-model="categoryString" placeholder='Enter option (Use "," to add new category)' required type="text" class="bg-slate-700 p-3 rounded-lg text-lg grow" />
           </div>
         </div>
         <div class="flex flex-col grow">
@@ -344,7 +363,7 @@ onBeforeMount(() => {
         <label for="Games">Currency</label>
         <select required class="bg-slate-700 p-3 rounded-lg text-lg max-w-md" name="Games" id="Games" v-model="newItems.currency">
           <option selected disabled value="">Select currency</option>
-          <option v-for="currency in categories" :key="currency.id" :value="currency.id"><img :src="currency.image" alt="" /> {{ currency.name }}</option>
+          <option v-for="currency in currencies" :key="currency.id" :value="currency.id"><img :src="currency.image" alt="" /> {{ currency.name }}</option>
           <option selected v-if="addedCurrency.type == 'success'" :value="newCurrency.id">{{ newCurrency.name }}</option>
           <option value="add">
             <span class="flex gap-3"><AddIcon />Add new currency</span>

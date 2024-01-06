@@ -35,7 +35,12 @@ const getAllCategories = () => {
       categories.add(category);
     });
   });
-  return Array.from(categories);
+  const cat = shuffleArray(Array.from(categories))
+    .filter((category) => category !== "All Products")
+    .filter((category) => category !== "Popular");
+  cat.unshift("Popular");
+  cat.push("All Products");
+  return cat;
 };
 
 const categories = computed(() => {
@@ -50,12 +55,30 @@ const getGameLink = (game) => {
   return $route.path.includes("admin") ? `/admin/item/${game.id}` : `/products/${game.id}`;
 };
 
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    // Swap array[i] and array[j]
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
 const filteredGames = computed(() => {
-  if (!selectedCategory.value) {
+  if ($route.path === "/") {
+    const result = [];
+    const cat = ["Popular", "All Products"];
+    cat.forEach((category) => {
+      const categoryGames = shuffleArray(games.value.filter((game) => game.categories.includes(category))).slice(0, 6);
+      result.push({ category, games: categoryGames });
+    });
+
+    return result;
+  } else if (!selectedCategory.value) {
     const result = [];
 
     categories.value.forEach((category) => {
-      const categoryGames = games.value.filter((game) => game.categories.includes(category)).slice(0, 6);
+      const categoryGames = shuffleArray(games.value.filter((game) => game.categories.includes(category))).slice(0, 6);
       result.push({ category, games: categoryGames });
     });
 
@@ -81,7 +104,7 @@ onBeforeMount(() => {
         <RouterLink v-else-if="selectedCategory" to="/products" class="text-lg font-semibold flex gap-2 items-center">Back</RouterLink>
       </div>
       <div :class="!selectedCategory ? 'overflow-x-scroll' : 'flex-wrap justify-center'" class="flex gap-3 p-3">
-        <RouterLink :to="getGameLink(game)" class="min-w-52 max-w-72 lg:min-w-72 relative text-center bg-slate-700 overflow-hidden rounded-xl pb-2 hover:scale-105 duration-300" v-for="game in category.games" :key="game.id">
+        <RouterLink :to="getGameLink(game)" class="min-w-52 max-w-52 lg:max-w-72 lg:min-w-72 relative text-center bg-slate-700 overflow-hidden rounded-xl pb-2 hover:scale-105 duration-300" v-for="game in category.games" :key="game.id">
           <div class="aspect-square p-3 flex items-center relative w-full overflow-hidden">
             <img class="top-0 h-full w-auto rounded-xl" :src="`${game.image}`" alt="" />
           </div>

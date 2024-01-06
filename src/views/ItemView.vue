@@ -1,16 +1,35 @@
 <script setup>
-import { ref, onBeforeMount } from "vue";
-import { db } from "@/firebase/init";
-import { getDoc, getDocs, doc, collection, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { useRoute, useRouter } from "vue-router";
+import { ref, onBeforeMount, toRef, toRefs } from "vue";
+import { getDoc, getDocs, doc, collection, setDoc, addDoc, serverTimestamp, where, updateDoc } from "firebase/firestore";
+import { useRoute, useRouter, RouterLink } from "vue-router";
 import { useSessionStore } from "@/stores/user";
+import { db } from "@/firebase/init";
 
 const session = useSessionStore();
 const $route = useRoute();
 const $router = useRouter();
 
+const isEqual = (obj1, obj2, keys) => {
+  for (const key of keys) {
+    const val1 = obj1[key];
+    const val2 = obj2[key];
+
+    if (typeof val1 === "object" && typeof val2 === "object") {
+      if (!areValuesEqual(val1, val2, Object.keys(val1))) {
+        return false;
+      }
+    } else if (val1 !== val2) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const cart = ref({
-  game: {},
+  game: {
+    products: [],
+  },
   currency: {},
   item: {},
   loginMethod: {},
@@ -24,16 +43,13 @@ const addToCart = async () => {
     alert("Please select currency and item");
     return;
   }
+  const thisCart = cart.value;
 
-  const thisCart = { ...cart.value }; // Create a shallow copy for clarity
   const cartCollection = collection(db, "cart");
-
-  // Get references to the game, currency, and item documents
   const gameRef = doc(db, "game", $route.params.id);
   const currencyRef = doc(gameRef, "products", cart.value.currency.id);
   const itemRef = doc(currencyRef, "items", cart.value.item.id);
 
-  // Update the cart object with the document references
   thisCart.item = itemRef;
   thisCart.game = gameRef;
   thisCart.currency = currencyRef;
@@ -41,17 +57,44 @@ const addToCart = async () => {
   thisCart.timestamp = serverTimestamp();
 
   try {
-    // Add the cart object to the user's cart document
-    const docRef = await addDoc(cartCollection, thisCart);
-    console.log("Post added with ID: ", docRef.id);
+    const querySnapshot = await getDocs(cartCollection, where("user", "==", session.user.uid), where("item", "==", itemRef));
 
-    // Update the item document with the cart ID
-    await setDoc(itemRef, { cartId: docRef.id }, { merge: true });
+    let existingCartFound = false;
 
-    // Redirect to the cart page
-    $router.push("/cart");
+    for (const doc of querySnapshot.docs) {
+      const existingCart = doc.data();
+      console.log(JSON.stringify(existingCart.loginMethod));
+      console.log(JSON.stringify(thisCart.loginMethod));
+      console.log(isEqual(existingCart.loginMethod, thisCart.loginMethod, Object.keys(thisCart.loginMethod)));
+
+      if (isEqual(existingCart.loginMethod, thisCart.loginMethod, Object.keys(thisCart.loginMethod))) {
+        if (existingCart.qty + thisCart.qty <= 5) {
+          // Update the existing cart document with the new quantity
+          await updateDoc(doc.ref, { qty: existingCart.qty + thisCart.qty });
+          $router.push("/cart");
+          existingCartFound = true;
+          break; // Stop checking once a matching cart is found
+        } else {
+          // Alert when the maximum quantity is reached for this item and account
+          existingCartFound = true;
+          alert("Maximum quantity reached for this item and account");
+          return;
+        }
+      } else {
+        // Continue to check the next existing cart
+        continue;
+      }
+    }
+
+    if (!existingCartFound) {
+      const docRef = await addDoc(cartCollection, thisCart);
+      const cartRef = doc(cartCollection, docRef.id);
+      await updateDoc(docRef, { cartId: docRef.id }, { merge: true });
+      $router.push("/cart");
+    }
   } catch (error) {
-    console.error("Error adding post: ", error);
+    console.error("Error processing cart:", error);
+    alert("Error processing cart. Please try again.");
   }
 };
 
@@ -64,23 +107,23 @@ const getGame = async () => {
     const gameRef = doc(db, "game", $route.params.id);
     const docSnap = await getDoc(gameRef);
     cart.value.game = docSnap.data();
-    // cart.value.loginMethod = cart.value.game.method.map((element) => ({ [element.name]: "" }));
+
     cart.value.loginMethod = cart.value.game.method.reduce((acc, element) => {
       acc[element.name] = "";
       return acc;
     }, {});
 
-    // console.log(cart.value);
     const productsRef = collection(gameRef, "products");
     const productsSnapshot = await getDocs(productsRef);
 
     cart.value.game.products = productsSnapshot.docs.map((doc) => doc.data());
-    // console.log(cart.value.game.products);
     if (cart.value.game.products.length > 0) {
       cart.value.currency = cart.value.game.products[0];
       getItems();
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error fetching game details:", error);
+  }
 };
 
 const getItems = async () => {
@@ -91,9 +134,8 @@ const getItems = async () => {
 
     const itemsSnapshot = await getDocs(itemsRef);
     product.value.items = itemsSnapshot.docs.map((doc) => doc.data());
-    // console.log(product.value.items);
   } catch (error) {
-    // console.error("Error fetching items:", error);
+    console.error("Error fetching items:", error);
   }
 };
 
@@ -109,10 +151,10 @@ onBeforeMount(() => {
       <RouterLink to="/products" class="bg-slate-700 p-3 rounded-xl">Back</RouterLink>
     </div>
     <div class="flex flex-col lg:flex-row gap-3">
-      <div class="lg:w-96 w flex flex-col gap-3">
-        <img :src="cart.game.image" alt="" />
-        <div>
-          <p class="bg-slate-700 p-3 rounded-md">{{ cart.game.desc }}</p>
+      <div class="lg:w-96 w flex lg:flex-col gap-3">
+        <img class="max-lg:w-40" :src="cart.game.image" alt="" />
+        <div class="bg-slate-700 p-3 max-lg:flex-grow rounded-md">
+          <p>{{ cart.game.desc }}</p>
         </div>
       </div>
       <div class="flex flex-col w-full">
@@ -137,7 +179,7 @@ onBeforeMount(() => {
                 v-for="product in cart.game.products"
                 :key="product.id"
                 :class="cart.currency.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
-                class="flex flex-col gap-2 relative w-4/12 p-3 rounded-xl justify-center items-center text-center"
+                class="flex flex-col hover:bg-slate-500 hover:scale-110 duration-300 gap-2 relative w-4/12 p-3 rounded-xl justify-center items-center text-center"
               >
                 <input @change="getItems" :value="product" v-model="cart.currency" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
                 <img :src="product.image" alt="" />
@@ -151,7 +193,12 @@ onBeforeMount(() => {
           <div class="flex flex-col gap-3">
             <label for="item">Item</label>
             <div v-if="product.items.length > 0" class="flex gap-3">
-              <div v-for="item in product.items" :key="item.id" :class="cart.item.id == item.id ? 'bg-blue-500 ' : 'bg-slate-600'" class="flex flex-col relative w-4/12 p-3 rounded-xl items-center text-center">
+              <div
+                v-for="item in product.items"
+                :key="item.id"
+                :class="cart.item.id == item.id ? 'bg-blue-500 ' : 'bg-slate-600'"
+                class="flex hover:bg-slate-500 hover:scale-110 duration-300 flex-col relative w-4/12 p-3 rounded-xl items-center text-center"
+              >
                 <input :value="item" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
                 <img :src="cart.currency.image" alt="" />
                 <label class="text-lg" :for="'category_' + item.id">{{ item.name }}</label>

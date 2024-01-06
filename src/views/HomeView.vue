@@ -1,5 +1,6 @@
 <script setup>
 import carousel from "@/components/carousel.vue";
+import ProductsView from "./ProductsView.vue";
 </script>
 
 <template>
@@ -7,6 +8,7 @@ import carousel from "@/components/carousel.vue";
     <div class="flex flex-col grow container">
       <h1 class="text-3xl bold">Welcome To Our Gaming Store!</h1>
       <!-- <carousel /> -->
+      <ProductsView />
     </div>
   </div>
 </template>
