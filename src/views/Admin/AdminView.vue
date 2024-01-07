@@ -12,23 +12,52 @@
 </template>
 
 <script setup>
-import { onBeforeMount } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { useSessionStore } from "@/stores/user";
 import { useRouter, useRoute } from "vue-router";
 import { auth } from "@/firebase/init";
 import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, collection } from "firebase/firestore";
+import { db } from "@/firebase/init";
 
 const $route = useRoute();
 const $router = useRouter();
 const session = useSessionStore();
+
 const isActive = (path) => {
   return $route.path.includes(path);
 };
-const sessionCheck = () => {
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      $router.push("/login");
+
+const admins = ref([]);
+
+const getAdmins = async () => {
+  try {
+    const querySnapshot = await getDoc(doc(collection(db, "admins"), "admins"));
+    if (querySnapshot.exists()) {
+      const admin = querySnapshot.data();
+      admins.value = admin.admin;
+    } else {
+      console.error("Admin document does not exist.");
     }
+  } catch (error) {
+    console.error("Error fetching admins:", error);
+  }
+};
+
+const checkAdminStatus = (user) => {
+  if (!user) {
+    $router.push("/login");
+  } else {
+    if (!admins.value.includes(user.email)) {
+      $router.push("/");
+    }
+  }
+};
+
+const sessionCheck = async () => {
+  onAuthStateChanged(auth, (user) => {
+    getAdmins();
+    checkAdminStatus(user);
   });
 };
 

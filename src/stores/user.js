@@ -3,6 +3,8 @@ import { defineStore } from "pinia";
 import { useRouter } from "vue-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/firebase/init";
+import { db } from "@/firebase/init";
+import { collection, getDoc, doc } from "firebase/firestore";
 
 export const useSessionStore = defineStore("session", () => {
   const router = useRouter();
@@ -10,23 +12,37 @@ export const useSessionStore = defineStore("session", () => {
   const isLoggedIn = ref(false);
   const isAdmin = ref(false);
   const modalOpen = ref("");
-  const admins = ["hapis.hanipuddin@gmail.com", "msauqi.ihsan324@gmail.com", "aqielsyafiq11@gmail.com", "tubagusalif1504@gmail.com", "ahmadtaqi999@gmail.com"];
+  const admins = ref([]);
 
   // Move your logic to a separate function
-  const initializeStore = () => {
+  const initializeStore = async () => {
     onAuthStateChanged(auth, (userres) => {
+      getAdmins();
       if (userres) {
         isLoggedIn.value = true;
         user.value = userres;
-        if (admins.includes(user.value.email)) {
-          isAdmin.value = true;
-        }
       } else {
         user.value = null;
         isLoggedIn.value = false;
         isAdmin.value = false;
       }
     });
+  };
+
+  const getAdmins = async () => {
+    try {
+      const querySnapshot = await getDoc(doc(collection(db, "admins"), "admins"));
+      if (querySnapshot.exists()) {
+        const admin = querySnapshot.data();
+        admins.value = admin.admin;
+        console.log(admins.value);
+        isAdmin.value = admins.value.includes(user.value.email);
+      } else {
+        console.error("Admin document does not exist.");
+      }
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+    }
   };
 
   function openModal(modal) {
@@ -58,5 +74,5 @@ export const useSessionStore = defineStore("session", () => {
     initializeStore();
   });
 
-  return { user, isLoggedIn, isAdmin, modalOpen, initializeStore, logout, openModal, check };
+  return { user, admins, isLoggedIn, isAdmin, modalOpen, initializeStore, logout, openModal, check };
 });
