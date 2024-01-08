@@ -36,6 +36,7 @@ const getAdmins = async () => {
     if (querySnapshot.exists()) {
       const admin = querySnapshot.data();
       admins.value = admin.admin;
+      checkAdminStatus(auth.currentUser);
     } else {
       console.error("Admin document does not exist.");
     }
@@ -50,6 +51,7 @@ const checkAdminStatus = (user) => {
   } else {
     if (!admins.value.includes(user.email)) {
       $router.push("/");
+      // isAdmin.value = true;
     }
   }
 };
@@ -57,7 +59,6 @@ const checkAdminStatus = (user) => {
 const sessionCheck = async () => {
   onAuthStateChanged(auth, (user) => {
     getAdmins();
-    checkAdminStatus(user);
   });
 };
 

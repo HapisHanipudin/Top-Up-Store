@@ -150,14 +150,14 @@ onBeforeMount(() => {
       <h1 class="text-3xl font-bold mt-3">{{ cart.game.name }}</h1>
       <RouterLink to="/products" class="bg-slate-700 p-3 rounded-xl">Back</RouterLink>
     </div>
-    <div class="flex flex-col lg:flex-row gap-3">
-      <div class="lg:w-96 w flex lg:flex-col gap-3">
+    <div class="flex flex-col w-full lg:flex-row gap-3">
+      <div class="lg:w-1/3 w-full flex lg:flex-col gap-3">
         <img class="max-lg:w-40" :src="cart.game.image" alt="" />
         <div class="bg-slate-700 p-3 max-lg:flex-grow rounded-md">
           <p>{{ cart.game.desc }}</p>
         </div>
       </div>
-      <div class="flex flex-col w-full">
+      <div class="flex flex-col lg:w-2/3 gap-3">
         <form action="#" class="flex flex-col gap-3">
           <div v-if="cart.game.method" v-for="method in cart.game.method" class="flex flex-col gap-3">
             <label :for="method.name">{{ method.name }}</label>
@@ -174,30 +174,32 @@ onBeforeMount(() => {
 
           <div class="flex flex-col gap-3 bg-slate-700 p-3 rounded-xl">
             <label for="currency">Currency</label>
-            <div class="flex gap-3">
-              <div
-                v-for="product in cart.game.products"
-                :key="product.id"
-                :class="cart.currency.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
-                class="flex flex-col hover:bg-slate-500 hover:scale-110 duration-300 gap-2 relative w-4/12 p-3 rounded-xl justify-center items-center text-center"
-              >
-                <input @change="getItems" :value="product" v-model="cart.currency" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
-                <img :src="product.image" alt="" />
-                <label class="text-lg" :for="'category_' + product">{{ product.name }}</label>
-              </div>
-              <div v-if="cart.game.products.length == 0" class="flex flex-col relative w-4/12 p-3 rounded-xl items-center text-center bg-slate-600">
-                <label class="text-lg">No items found</label>
+            <div class="flex gap-3 py-4 overflow-x-scroll">
+              <div class="flex gap-3 flex-nowrap">
+                <div
+                  v-for="product in cart.game.products"
+                  :key="product.id"
+                  :class="cart.currency.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
+                  class="flex flex-col hover:bg-slate-500 hover:scale-110 duration-300 gap-2 relative min-w-44 p-3 rounded-xl justify-center items-center text-center"
+                >
+                  <input @change="getItems" :value="product" v-model="cart.currency" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
+                  <img :src="product.image" alt="" />
+                  <label class="text-lg" :for="'category_' + product">{{ product.name }}</label>
+                </div>
+                <div v-if="cart.game.products.length == 0" class="flex flex-col relative w-4/12 p-3 rounded-xl items-center text-center bg-slate-600">
+                  <label class="text-lg">No items found</label>
+                </div>
               </div>
             </div>
           </div>
           <div class="flex flex-col gap-3">
             <label for="item">Item</label>
-            <div v-if="product.items.length > 0" class="flex gap-3">
+            <div v-if="product.items.length > 0" class="flex gap-3 flex-wrap">
               <div
                 v-for="item in product.items"
                 :key="item.id"
                 :class="cart.item.id == item.id ? 'bg-blue-500 ' : 'bg-slate-600'"
-                class="flex hover:bg-slate-500 hover:scale-110 duration-300 flex-col relative w-4/12 p-3 rounded-xl items-center text-center"
+                class="flex hover:bg-slate-500 hover:scale-110 duration-300 flex-col relative lg:w-[32%] w-[49%] p-3 rounded-xl items-center text-center"
               >
                 <input :value="item" v-model="cart.item" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
                 <img :src="cart.currency.image" alt="" />
