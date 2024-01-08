@@ -180,13 +180,13 @@ onBeforeMount(() => {
                   v-for="product in cart.game.products"
                   :key="product.id"
                   :class="cart.currency.id == product.id ? 'bg-blue-500 ' : 'bg-slate-600'"
-                  class="flex flex-col hover:bg-slate-500 hover:scale-110 duration-300 gap-2 relative min-w-44 p-3 rounded-xl justify-center items-center text-center"
+                  class="flex flex-col hover:bg-slate-500 hover:scale-110 duration-300 gap-2 relative max-w-44 min-w-44 p-3 rounded-xl justify-center items-center text-center"
                 >
                   <input @change="getItems" :value="product" v-model="cart.currency" class="absolute opacity-0 cursor-pointer w-full h-full top-0 left-0" type="radio" name="currency" id="currency" />
                   <img :src="product.image" alt="" />
                   <label class="text-lg" :for="'category_' + product">{{ product.name }}</label>
                 </div>
-                <div v-if="cart.game.products.length == 0" class="flex flex-col relative w-4/12 p-3 rounded-xl items-center text-center bg-slate-600">
+                <div v-if="cart.game.products.length == 0" class="flex flex-col relative w-4/12 p-3 rounded-xl max-w-44 min-w-44 items-center text-center bg-slate-600">
                   <label class="text-lg">No items found</label>
                 </div>
               </div>

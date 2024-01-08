@@ -17,8 +17,7 @@ const toggleProfileDropdown = () => {
   <div class="bg-slate-600 z-40 max-lg:w-full lg:w-[89.2px] relative bottom-0 max-lg:fixed lg:static max-lg:p-5 lg:px-5 lg:h-auto flex justify-center">
     <div class="flex lg:py-5 lg:fixed lg:top-0 lg:h-screen lg:flex-col gap-7">
       <RouterLink to="/" class="text-center hidden lg:block">
-        LOGO <br />
-        HERE
+        <img class="max-w-10" src="../assets/img/gameingstore logo.png" alt="" />
       </RouterLink>
       <div class="flex border-t border-gray-400"></div>
       <Nav></Nav>
