@@ -11,5 +11,8 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require("tailwindcss-3d")({ legacy: true }),
+    // ...
+  ],
 };

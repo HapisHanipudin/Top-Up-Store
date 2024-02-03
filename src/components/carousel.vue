@@ -1,20 +1,35 @@
 <template>
-  <div class="relative max-w-screen-md mx-auto overflow-hidden">
-    <div v-for="(item, index) in images" :key="index" :class="slideClasses(index)">
-      <img :src="item.image" :alt="item.caption" class="w-full h-full object-cover" />
-      <div class="absolute inset-0 flex items-center justify-center">
-        <div class="text-white text-lg font-semibold">{{ item.caption }}</div>
-      </div>
+  <div class="relative max-w-screen-md mx-auto min-h-[27.5rem] carousel flex justify-center items-center">
+    <div
+      v-for="(item, index) in images"
+      :key="index"
+      class="duration-500 ease-in-out absolute h-72 inset-y-auto inset-x-auto aspect-video transform perspective-1000"
+      :class="{
+        '-translate-x-[110%] rotate-y-45': item.slide === slides.before,
+        'opacity-1': item.slide === slides.active,
+        'translate-x-[110%]': item.slide === slides.after,
+        'opacity-0': item.slide === slides.inactive[0] || index === slides.inactive[1],
+      }"
+    >
+      <img
+        :src="item.image"
+        :alt="item.caption"
+        class="w-full h-full object-cover"
+        :class="{
+          '': item.slide == slides.before,
+          '': item.slide == slides.active,
+          ' ': item.slide == slides.after,
+          '': item.slide == slides.inactive[0] || index == slides.inactive[1],
+        }"
+      />
     </div>
-    <button @click="prevSlide" class="left-4 absolute top-1/2 transform -translate-y-1/2 p-4 bg-gray-800 text-white cursor-pointer">Previous</button>
-    <button @click="nextSlide" class="right-4 absolute top-1/2 transform -translate-y-1/2 p-4 bg-gray-800 text-white cursor-pointer">Next</button>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from "vue";
 
-const slides = ref({ before: 5, active: 1, after: 2 });
+const slides = ref({ before: 0, active: 1, after: 2, inactive: [3, 4] });
 
 const goToSlide = (index) => {
   slides.value = {
@@ -26,7 +41,6 @@ const goToSlide = (index) => {
 const slidesMovement = () => {
   slides.value.before--;
 };
-
 const images = ref([
   {
     image: "https://ditusi.co.id/assets/uploads/sliders/1701357471_4703f96155f94d833861.jpg",
